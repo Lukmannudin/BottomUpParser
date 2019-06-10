@@ -272,20 +272,32 @@ begin
           reducing_stack := true;
     end // end reduce_rule  
 end;
+function grammar_check(kolom:integer):string;
+begin
+  grammar_check := '';
+  case kolom of
+    c : grammar_check := c_grammar;
+    d : grammar_check := d_grammar;
+    dS : grammar_check := dS_grammar;
+    wS : grammar_check := wS_grammar;
+    wC : grammar_check := wC_grammar;
+  end;  
+end;
 
 function derivation_mechanism(kolom:integer;var tableparsing: table_parsing; 
   var top_stack:stack_pointer):boolean;
 var
   bantu: integer;
   bantu2: string;
+  grammar : string;
 begin
   derivation_mechanism := false;
   bantu:= strToInt(top_stack^.info);  
   bantu2 := tableparsing[bantu+1,kolom];
-  
+  grammar := grammar_check(kolom);
   if uppercase(bantu2[1]) = shift_rule then
     begin
-      shift(d_grammar,bantu2,top_stack);
+      shift(grammar,bantu2,top_stack);
       derivation_mechanism := true;
       writeln('ACTION shift: ',tableparsing[bantu+1,kolom]);
     end;
@@ -310,7 +322,7 @@ begin
   
   if tableparsing[bantu+1,kolom] <> '' then
     begin
-      derivation_terminal_simulation := derivation_mechanism(d,tableparsing,top_stack);
+      derivation_terminal_simulation := derivation_mechanism(kolom,tableparsing,top_stack);
     end
       else
         writeln('Sorry, your input string not acceptable');
@@ -324,8 +336,9 @@ var
   bantu: integer;
   bantu2: string;
   kolomPosition:integer;
-  experiment: integer;
+  limitIteration,limit: integer;
 begin
+  limit := 50;
   input := concat(input,'$');
   writeln('Your Input String : ',input);
   // split string to array
@@ -340,36 +353,21 @@ begin
   top_stack := nil;
   push_stack('0',top_stack);
 
-  experiment := 0;
+  limitIteration := 0;
   // for i:=0 to length(arr) do
-  while (i < length(arr)) and (i<6) do
+  while (i < length(arr)) and (i<limit) do
   begin
     case arr[i] of
       c_grammar: begin
-          kolomPosition := c;
-          bantu:= strToInt(top_stack^.info);
-          writeln('TABLE PARSING: ',tableparsing[bantu+1,c]);
-          writeln('C GRAMMAR');
-          writeln('Current String : ',arr[i], ' position: [',i,']');
-          
-          show_stack(top_stack);
-          bantu:= strToInt(top_stack^.info);
-            if tableparsing[bantu+1,c] <> '' then
-            begin
-              bantu2 := tableparsing[bantu+1,c];
-              if uppercase(bantu2[1]) = shift_rule then
-              begin
-                push_stack(c_grammar,top_stack);
-                push_stack(bantu2[2],top_stack);
-                writeln('ACTION shift: ',tableparsing[bantu+1,c]);
-                experiment := experiment +1;
-              end else
-                if uppercase(bantu2[1]) = reduce_rule then
-                  begin
-                     writeln('ACTION reduce: ',tableparsing[bantu+1,c]);
-                  end
-            end;
-          writeln();
+                  kolomPosition := c;
+                  bantu:= strToInt(top_stack^.info);
+                  writeln('TABLE PARSING: ',tableparsing[bantu+1,c]);
+                  writeln('DS GRAMMAR');
+                  writeln('Current String : ',arr[i], ' position: [',i,']');
+                  if derivation_terminal_simulation(c,tableparsing,top_stack) = false then
+                    break;
+                             
+                    writeln();
        end;
       d_grammar: begin
                   kolomPosition := d;
@@ -389,14 +387,9 @@ begin
                   writeln('TABLE PARSING: ',tableparsing[bantu+1,dS]);
                   writeln('DS GRAMMAR');
                   writeln('Current String : ',arr[i], ' position: [',i,']');
-                  // if derivation_terminal_simulation(dS,tableparsing,top_stack) = false then
-                  //   break;
-                  show_stack(top_stack);                 
-                  pop_stack(top_stack);
-                  pop_stack(top_stack);
-                  // push_stack('<C>',top_stack);
-
-                  // push_stack('<C>',top_stack);
+                  if derivation_terminal_simulation(dS,tableparsing,top_stack) = false then
+                    break;
+                             
                     writeln();
                   end;
       else
@@ -408,18 +401,18 @@ begin
         writeln();
       end;//end d_grammar
       bantu:= strToInt(top_stack^.info);
-      // writeln('TABLE PARSING: ',tableparsing[bantu+1,d]);
-      writeln('CEK POSISI ANJIG:',tableparsing[bantu+1,kolomPosition]);
-       writeln('POSISI ANJING = ','barus:',bantu+1,' kolom:',kolomPosition);
-      bantu2 := tableparsing[bantu+1,d];
+      bantu2 := tableparsing[bantu+1,kolomPosition];
       writeln('bantu:',bantu2[1]);
+      limitIteration := limitIteration + 1;
+      writeln('limitIteration : ',limitIteration);
+
       if uppercase(bantu2[1]) = shift_rule then
         i := i+1;
 
-        // experiment := experiment +1;
+      if (limitIteration = limit) OR (bantu2 = 'ACC') then
+        break;
   end;//end case
-
-  writeln('experiment : ',experiment);
+  show_stack(top_stack);
 end;
 
 begin
