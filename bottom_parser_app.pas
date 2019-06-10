@@ -33,7 +33,6 @@ type
   end;
   array_string = array of char;
 var
-  tparsing: table_parsing;
   top_stack: stack_pointer;
 
   function set_table_parsing(tp:table_parsing):table_parsing;
@@ -148,8 +147,11 @@ procedure show_stack(awal:stack_pointer);
 var
    bantu:stack_pointer;
    i : integer;
+   arrInvers : array of string;
 begin
-i:=1;
+status := false;
+
+i:=0;
      write('Data : ');
      if awal=nil then
         writeln('Data kosong')
@@ -164,6 +166,11 @@ i:=1;
           end;
           writeln;
      end;
+    writeln('Jumlah Stack = ',i);
+    
+    // setLength(arrInvers,i);
+    // writeln('MAX ARRAY : ',length(arrInvers));
+
 end;
 
 function rule_1(var top_stack: stack_pointer):boolean;
@@ -239,6 +246,7 @@ end;
 
 function baris_position(info:string):integer;
 begin
+info := uppercase(info);
       case top_stack^.info of
         '<S>': baris_position := wS;         
         '<C>': baris_position := wC; 
@@ -315,7 +323,6 @@ function derivation_terminal_simulation(kolom:integer;
 var tableparsing:table_parsing;var top_stack:stack_pointer):boolean;
 var 
   bantu:integer;
-  reducingStatus:boolean;
 begin
   derivation_terminal_simulation := false;
   bantu:= strToInt(top_stack^.info);
@@ -328,10 +335,35 @@ begin
         writeln('Sorry, your input string not acceptable');
   end;
 
-procedure bottom_up(input:string;tparsing:table_parsing);
+procedure set_string_to_array(input:string; var arr:array_string);
+var
+  i,len: integer;
+begin
+  i:=0;
+  input := concat(input,'$');
+  len := length(input);
+  setLength(arr,len);
+
+  for i:=len downto 0 do 
+      arr[i-1] := input[i];
+  
+  writeln('Your Input String : ',input);
+  writeln();
+
+end;
+
+procedure init_bottom_up(var top_stack:stack_pointer; var tableparsing:table_parsing);
+begin
+  tableparsing := set_table_parsing(tableparsing);
+  top_stack := nil;
+  push_stack('0',top_stack);
+end;
+
+
+procedure bottom_up(input:string);
 var
   arr: array of char;
-  i,len: integer;
+  i: integer;
   tableparsing: table_parsing;
   bantu: integer;
   bantu2: string;
@@ -339,72 +371,42 @@ var
   limitIteration,limit: integer;
 begin
   limit := 50;
-  input := concat(input,'$');
-  writeln('Your Input String : ',input);
-  // split string to array
-  len := length(input);
-  setLength(arr,len);
-
-  for i:=len downto 0 do 
-      arr[i-1] := input[i];
   
-  tableparsing := set_table_parsing(tparsing);
-
-  top_stack := nil;
-  push_stack('0',top_stack);
+  set_string_to_array(input,arr);
+  init_bottom_up(top_stack,tableparsing);
 
   limitIteration := 0;
-  // for i:=0 to length(arr) do
+  i :=0;
+  
   while (i < length(arr)) and (i<limit) do
   begin
+    show_stack(top_stack);
+
     case arr[i] of
-      c_grammar: begin
-                  kolomPosition := c;
-                  bantu:= strToInt(top_stack^.info);
-                  writeln('TABLE PARSING: ',tableparsing[bantu+1,c]);
-                  writeln('DS GRAMMAR');
-                  writeln('Current String : ',arr[i], ' position: [',i,']');
-                  if derivation_terminal_simulation(c,tableparsing,top_stack) = false then
-                    break;
-                             
-                    writeln();
-       end;
-      d_grammar: begin
-                  kolomPosition := d;
-                  bantu:= strToInt(top_stack^.info);
-                  writeln('TABLE PARSING: ',tableparsing[bantu+1,d]);                  
-                  writeln('D GRAMMAR');
-                  writeln('Current String : ',arr[i], ' position: [',i,']');
-                  show_stack(top_stack);
-                  if derivation_terminal_simulation(d,tableparsing,top_stack) = false then
-                    break;
-
-                  writeln();
-                end;
-      dS_grammar : begin
-                  kolomPosition := dS;
-                  bantu:= strToInt(top_stack^.info);
-                  writeln('TABLE PARSING: ',tableparsing[bantu+1,dS]);
-                  writeln('DS GRAMMAR');
-                  writeln('Current String : ',arr[i], ' position: [',i,']');
-                  if derivation_terminal_simulation(dS,tableparsing,top_stack) = false then
-                    break;
-                             
-                    writeln();
-                  end;
-      else
-        bantu:= strToInt(top_stack^.info);
-        writeln('TABLE PARSING: ',tableparsing[bantu+1,dS]);
+      c_grammar   : kolomPosition := c;
+      d_grammar   : kolomPosition := d;
+      dS_grammar  : kolomPosition := dS;
+      else 
         writeln('Sorry i cannot do far ');
-                  show_stack(top_stack);
+    end;//end d_grammar
 
-        writeln();
-      end;//end d_grammar
       bantu:= strToInt(top_stack^.info);
+      
+      writeln('ACTION : ',tableparsing[bantu+1,kolomPosition]);
+      writeln('DS GRAMMAR');
+      writeln('Current String : ',arr[i], ' position: [',i,']');
+
+      // show_stack(top_stack);
+
+      if derivation_terminal_simulation(kolomPosition,tableparsing,top_stack) = false then
+        break;
+
+      writeln();
+
       bantu2 := tableparsing[bantu+1,kolomPosition];
-      writeln('bantu:',bantu2[1]);
       limitIteration := limitIteration + 1;
-      writeln('limitIteration : ',limitIteration);
+      
+      // show_stack(top_stack);
 
       if uppercase(bantu2[1]) = shift_rule then
         i := i+1;
@@ -412,11 +414,10 @@ begin
       if (limitIteration = limit) OR (bantu2 = 'ACC') then
         break;
   end;//end case
-  show_stack(top_stack);
+  // show_stack(top_stack);
 end;
 
 begin
-  tparsing[n,m]:='0';
-  bottom_up('cdd',tparsing);
+  bottom_up('cdd');
   readln;
 end.
