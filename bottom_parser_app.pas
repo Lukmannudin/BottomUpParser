@@ -146,13 +146,12 @@ end;
 procedure show_stack(awal:stack_pointer);
 var
    bantu:stack_pointer;
-   i : integer;
+   i,j : integer;
    arrInvers : array of string;
+   max:integer;
 begin
-status := false;
-
 i:=0;
-     write('Data : ');
+     write('Stack : ');
      if awal=nil then
         writeln('Data kosong')
      else
@@ -160,17 +159,12 @@ i:=0;
           bantu:=awal;
           while bantu<>nil do
           begin
-               write('stack[',i,']:',bantu^.info:4,'| ');
+               write(bantu^.info:4,' ');
                bantu:=bantu^.next;
                i := i+1;
           end;
           writeln;
      end;
-    writeln('Jumlah Stack = ',i);
-    
-    // setLength(arrInvers,i);
-    // writeln('MAX ARRAY : ',length(arrInvers));
-
 end;
 
 function rule_1(var top_stack: stack_pointer):boolean;
@@ -191,7 +185,7 @@ end;
 function rule_2(var top_stack: stack_pointer):boolean;
 begin
   rule_2 := false;
-  writeln('REDUCE WITH RULE 2');
+  // writeln('REDUCE WITH RULE 2');
   if uppercase(top_stack^.next^.info) = uppercase(wC_grammar) then
     if uppercase(top_stack^.next^.next^.next^.info) = uppercase(c_grammar) then
       begin
@@ -207,8 +201,8 @@ end;
 function rule_3(var top_stack: stack_pointer):boolean;
 begin
   rule_3 := false;
-  writeln('REDUCE WITH RULE 3');
-  writeln('STACK AVAILABLE: ',top_stack^.next^.info);
+  // writeln('REDUCE WITH RULE 3');
+  // writeln('STACK AVAILABLE: ',top_stack^.next^.info);
   if uppercase(top_stack^.next^.info) = uppercase(d_grammar) then
     begin
       pop_stack(top_stack);
@@ -307,14 +301,14 @@ begin
     begin
       shift(grammar,bantu2,top_stack);
       derivation_mechanism := true;
-      writeln('ACTION shift: ',tableparsing[bantu+1,kolom]);
+      // writeln('ACTION shift: ',tableparsing[bantu+1,kolom]);
     end;
   
   if uppercase(bantu2[1]) = reduce_rule then
     begin
       derivation_mechanism := reducing_stack(bantu2,top_stack,tableparsing);
       derivation_mechanism := true;
-       writeln('ACTION reduce: ',tableparsing[bantu+1,kolom]);
+      //  writeln('ACTION reduce: ',tableparsing[bantu+1,kolom]);
     end 
       
 end;
@@ -363,7 +357,7 @@ end;
 procedure bottom_up(input:string);
 var
   arr: array of char;
-  i: integer;
+  i,j: integer;
   tableparsing: table_parsing;
   bantu: integer;
   bantu2: string;
@@ -393,9 +387,13 @@ begin
       bantu:= strToInt(top_stack^.info);
       
       writeln('ACTION : ',tableparsing[bantu+1,kolomPosition]);
-      writeln('DS GRAMMAR');
-      writeln('Current String : ',arr[i], ' position: [',i,']');
+      // writeln('Current String : ',arr[i], ' position: [',i,']');
 
+      write('STRING :');
+      for  j:= i to length(arr) - 1 do
+        write(arr[j]);
+
+      writeln;
       // show_stack(top_stack);
 
       if derivation_terminal_simulation(kolomPosition,tableparsing,top_stack) = false then
