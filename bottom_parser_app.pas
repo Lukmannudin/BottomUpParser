@@ -394,6 +394,20 @@ begin
   push_stack('0',top_stack);
 end;
 
+function getKolomPosition(grammar:string):integer;
+begin
+    case grammar of
+      c_grammar   : getKolomPosition := c;
+      d_grammar   : getKolomPosition := d;
+      dS_grammar  : getKolomPosition := dS;
+      else 
+        begin
+          getKolomPosition := -1;
+          writeln();
+          writeln('Please check your input string, some token not recognized');
+        end;
+    end;//end d_grammar
+end;
 
 procedure bottom_up(input:string);
 var
@@ -405,7 +419,7 @@ var
   kolomPosition:integer;
   limitIteration,limit: integer;
 begin
-  limit := 50;
+  limit := 10000;
   
   set_string_to_array(input,arr);
   init_bottom_up(top_stack,tableparsing);
@@ -415,20 +429,11 @@ begin
   
   while (i < length(arr)) and (i<limit) do
   begin
-    show_stack(top_stack);
+      show_stack(top_stack);
 
-    case arr[i] of
-      c_grammar   : kolomPosition := c;
-      d_grammar   : kolomPosition := d;
-      dS_grammar  : kolomPosition := dS;
-      else 
-        begin
-          writeln;
-          writeln('Sorry derivation failed :(');
-          writeln('Please check your input string');
-          break;
-        end;
-    end;//end d_grammar
+      kolomPosition :=  getKolomPosition(arr[i]);
+      
+      if (kolomPosition = -1) then break;
 
       bantu:= strToInt(top_stack^.info);
 
@@ -439,9 +444,6 @@ begin
       writeln;
       writeln('ACTION : ',tableparsing[bantu+1,kolomPosition]);
 
-      
-      // show_stack(top_stack);
-
       if derivation_terminal_simulation(kolomPosition,tableparsing,top_stack) = false then
         break;
 
@@ -450,13 +452,17 @@ begin
       bantu2 := tableparsing[bantu+1,kolomPosition];
       limitIteration := limitIteration + 1;
       
-      // show_stack(top_stack);
-
       if uppercase(bantu2[1]) = shift_rule then
         i := i+1;
 
-      if (limitIteration = limit) OR (bantu2 = 'ACC') then
+      if (bantu2 = 'ACC') then
         break;
+      
+      if (limitIteration = limit) then
+        begin
+          writeln('Derivation reaches limit.');
+          writeln('Increase your limit for more derivation');
+        end;
   end;//end case
   // show_stack(top_stack);
 end;
