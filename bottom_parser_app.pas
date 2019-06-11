@@ -34,6 +34,8 @@ type
   array_string = array of char;
 var
   top_stack: stack_pointer;
+  top_stack_dummy: stack_pointer;
+  inputString :  string;
 
   function set_table_parsing(tp:table_parsing):table_parsing;
   begin
@@ -100,6 +102,21 @@ var
     set_table_parsing := tp;
   end;
 
+procedure push_stack_dummy(data:string;var top_stack_dummy:stack_pointer);
+  var baru:stack_pointer;
+begin
+  new(baru);
+  baru^.info := data;
+  baru^.next := nil;
+
+  if top_stack_dummy = nil then
+    top_stack_dummy := baru
+  else
+  begin
+    baru^.next := top_stack_dummy;
+    top_stack_dummy := baru;
+  end;   
+end;
 
 procedure push_stack(data:string;var top_stack:stack_pointer);
   var baru:stack_pointer;
@@ -143,15 +160,10 @@ begin
     end;
 end;
 
-procedure show_stack(awal:stack_pointer);
+procedure show_stack_dummy(awal:stack_pointer);
 var
    bantu:stack_pointer;
-   i,j : integer;
-   arrInvers : array of string;
-   max:integer;
 begin
-i:=0;
-     write('Stack : ');
      if awal=nil then
         writeln('Data kosong')
      else
@@ -159,13 +171,38 @@ i:=0;
           bantu:=awal;
           while bantu<>nil do
           begin
-               write(bantu^.info:4,' ');
+               write(bantu^.info,' ');
+               bantu:=bantu^.next;
+          end;
+     end;
+end;
+
+procedure show_stack(awal:stack_pointer);
+var
+   bantu:stack_pointer;
+   i : integer;
+begin
+  i:=0;
+  top_stack_dummy := nil;
+     write('STACK  : ');
+     if awal=nil then
+        writeln('Data kosong')
+     else
+     begin
+          bantu:=awal;
+          while bantu<>nil do
+          begin
+              //  write(bantu^.info:4,' ');
+               push_stack_dummy(bantu^.info,top_stack_dummy);
                bantu:=bantu^.next;
                i := i+1;
           end;
+          show_stack_dummy(top_stack_dummy);
           writeln;
      end;
 end;
+
+
 
 function rule_1(var top_stack: stack_pointer):boolean;
 begin
@@ -326,7 +363,11 @@ begin
       derivation_terminal_simulation := derivation_mechanism(kolom,tableparsing,top_stack);
     end
       else
-        writeln('Sorry, your input string not acceptable');
+        begin
+          writeln();
+          writeln('Derivation Failed');
+          writeln('Please check your input string');
+        end;
   end;
 
 procedure set_string_to_array(input:string; var arr:array_string);
@@ -381,19 +422,24 @@ begin
       d_grammar   : kolomPosition := d;
       dS_grammar  : kolomPosition := dS;
       else 
-        writeln('Sorry i cannot do far ');
+        begin
+          writeln;
+          writeln('Sorry derivation failed :(');
+          writeln('Please check your input string');
+          break;
+        end;
     end;//end d_grammar
 
       bantu:= strToInt(top_stack^.info);
-      
-      writeln('ACTION : ',tableparsing[bantu+1,kolomPosition]);
-      // writeln('Current String : ',arr[i], ' position: [',i,']');
 
-      write('STRING :');
+      write('STRING : ');
       for  j:= i to length(arr) - 1 do
         write(arr[j]);
 
       writeln;
+      writeln('ACTION : ',tableparsing[bantu+1,kolomPosition]);
+
+      
       // show_stack(top_stack);
 
       if derivation_terminal_simulation(kolomPosition,tableparsing,top_stack) = false then
@@ -416,6 +462,8 @@ begin
 end;
 
 begin
-  bottom_up('cdd');
+  write('Please input your input string : ');
+  readln(inputString);
+  bottom_up(inputString);
   readln;
 end.
